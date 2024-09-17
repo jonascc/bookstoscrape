@@ -9,15 +9,19 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @SpringBootApplication
 public class BooksToScrapeApplication implements CommandLineRunner {
@@ -25,6 +29,9 @@ public class BooksToScrapeApplication implements CommandLineRunner {
     private static final Logger log = LoggerFactory.getLogger(BooksToScrapeApplication.class);
 
     private final BooksToScrapeDao booksToScrapeDao;
+
+    @Value("${bookstoscrape.url}")
+    private String booksToScrapeUrl;
 
     public BooksToScrapeApplication(BooksToScrapeDao booksToScrapeDao) {
         this.booksToScrapeDao = booksToScrapeDao;
@@ -36,25 +43,64 @@ public class BooksToScrapeApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String url = "https://books.toscrape.com/";
-        log.info("Parsing {}", url);
-        Document doc = parseUrl(url);
+        log.info("Parsing {}", booksToScrapeUrl);
+        Document doc = parseUrl(booksToScrapeUrl);
+
+        createTables();
 
         log.info("Scrapping categories.");
         List<Category> scrapedCategories = scrapeCategories(doc);
         Object[] array = scrapedCategories.stream().map(Category::toString).toArray();
         log.info(Arrays.toString(array));
-        log.info("Creating \"categories\" table.");
-        booksToScrapeDao.createCategoriesTable();
-        log.info("Creating \"books\" table.");
-        booksToScrapeDao.createBooksTable();
-        log.info("Inserting categories into database.");
+        log.info("Inserting categories into the database.");
         booksToScrapeDao.insertCategories(scrapedCategories);
 
         log.info("Scraping books catalogs.");
         List<Book> books = scrapeBooksCatalogsFromAllCategories(scrapedCategories);
-        log.info("Inserting books into database.");
+        books = books.stream().map(this::scrapeBookInformation).toList();
+        log.info("Inserting books into the database.");
         booksToScrapeDao.insertBooks(books);
+        log.info("Books inserted into the database.");
+    }
+
+    private Book scrapeBookInformation(Book book) {
+        log.info("Getting information about {} - {}", book.getCategory().name(), book.getName());
+        Document document = parseUrl(book.getUrl());
+        Element productDescriptionElement = document.getElementById("product_description");
+        String productDescription = productDescriptionElement != null ? productDescriptionElement.nextElementSibling().text() : null;
+        String starRatingClass = document.select("p.star-rating").getFirst().attr("class");
+        Elements tbody = document.select("table.table > tbody");
+        Elements tds = tbody.getFirst().getElementsByTag("td");
+
+        book.setDescription(productDescription);
+        book.setUpc(tds.getFirst().text());
+        book.setProductType(tds.get(1).text());
+        book.setPriceExcludingTax(new BigDecimal(sanitizePrice(tds.get(2).text())));
+        book.setPriceIncludingTax(new BigDecimal(sanitizePrice(tds.get(3).text())));
+        book.setTax(new BigDecimal(sanitizePrice(tds.get(4).text())));
+        book.setAvailability(tds.get(5).text());
+        book.setNumberOfReviews(Integer.valueOf(tds.get(6).text()));
+        book.setCurrency("£");
+        book.setStarRating(StarRating.getFromClassAttribute(starRatingClass));
+        return book;
+    }
+
+    private String sanitizePrice(String price) {
+        // Regular expression to extract the numeric value of a price
+        String regex = "\\d+(\\.\\d{1,2})?";
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(price);
+        if (matcher.find()) {
+            return matcher.group();
+        }
+        return null;
+    }
+
+    private void createTables() {
+        log.info("Creating \"categories\" table.");
+        booksToScrapeDao.createCategoriesTable();
+        log.info("Creating \"books\" table.");
+        booksToScrapeDao.createBooksTable();
     }
 
     private List<Book> scrapeBooksCatalogsFromAllCategories(List<Category> scrapedCategories) {
