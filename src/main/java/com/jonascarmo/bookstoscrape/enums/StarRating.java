@@ -1,4 +1,4 @@
-package com.jonascarmo.bookstoscrape;
+package com.jonascarmo.bookstoscrape.enums;
 
 import lombok.Getter;
 
