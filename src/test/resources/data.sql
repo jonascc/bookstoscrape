@@ -1,0 +1,4 @@
+CREATE TABLE categories(id UUID PRIMARY KEY, name VARCHAR(50), url VARCHAR(255));
+INSERT INTO categories (id, name, url) VALUES ('0383342d-925c-4b3b-ac26-e2df7a27d44a', 'Travel', 'https://books.toscrape.com/catalogue/category/books/travel_2/index.html');
+INSERT INTO categories (id, name, url) VALUES ('6d64c451-d8e3-467f-a4b3-6dbabe151a81', 'Mystery', 'https://books.toscrape.com/catalogue/category/books/mystery_3/index.html');
+INSERT INTO categories (id, name, url) VALUES ('551f00b8-3d95-49d2-8a6c-7cdfbd948a27', 'Historical Fiction', 'https://books.toscrape.com/catalogue/category/books/historical-fiction_4/index.html');
