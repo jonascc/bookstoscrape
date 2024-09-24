@@ -3,7 +3,6 @@ package com.jonascarmo.bookstoscrape.integration;
 import com.jayway.jsonpath.DocumentContext;
 import com.jayway.jsonpath.JsonPath;
 import com.jonascarmo.bookstoscrape.dto.CategoryDto;
-import com.jonascarmo.bookstoscrape.model.Category;
 import net.minidev.json.JSONArray;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +17,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import javax.sql.DataSource;
-
 import java.net.URI;
-import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
