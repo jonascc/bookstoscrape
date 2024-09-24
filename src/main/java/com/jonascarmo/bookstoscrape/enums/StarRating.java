@@ -30,4 +30,11 @@ public enum StarRating {
         return starRatingEnum.orElse(null);
     }
 
+    public static StarRating getFromNumberOfStars(int numberOfStars) {
+        Optional<StarRating> starRatingEnum = Arrays.stream(StarRating.values())
+                .filter(s -> s.numberOfStars == numberOfStars)
+                .findFirst();
+        return starRatingEnum.orElse(null);
+    }
+
 }
