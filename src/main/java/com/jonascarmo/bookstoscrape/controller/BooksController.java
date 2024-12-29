@@ -1,7 +1,6 @@
 package com.jonascarmo.bookstoscrape.controller;
 
 import com.jonascarmo.bookstoscrape.dto.BookDto;
-import com.jonascarmo.bookstoscrape.dto.CategoryDto;
 import com.jonascarmo.bookstoscrape.service.BookService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
