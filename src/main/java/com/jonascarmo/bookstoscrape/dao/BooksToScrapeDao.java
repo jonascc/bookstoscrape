@@ -31,7 +31,8 @@ public class BooksToScrapeDao {
                 "id UUID PRIMARY KEY, name VARCHAR(255), url VARCHAR(255), imgLink VARCHAR(255)," +
                 "availability VARCHAR(50), description CLOB(10K), upc VARCHAR(20), productType VARCHAR(5)," +
                 "priceExcludingTax NUMERIC(5,2), priceIncludingTax NUMERIC(5,2), tax NUMERIC(5,2), numberOfReviews INT," +
-                "currency CHAR, starRating INT)");
+                "currency CHAR, starRating INT, category_id UUID," +
+                "FOREIGN KEY (category_id) REFERENCES categories(id))");
     }
 
     public void insertCategories(List<Category> scrapedCategories) {
@@ -47,11 +48,12 @@ public class BooksToScrapeDao {
                 .map(book -> new Object[]{book.getId(), book.getName(), book.getUrl(), book.getImgLink(),
                 book.getAvailability(), book.getDescription(), book.getUpc(), book.getProductType(),
                 book.getPriceExcludingTax(), book.getPriceIncludingTax(), book.getTax(),
-                book.getNumberOfReviews(), book.getCurrency(), book.getStarRating().getNumberOfStars()}).toList();
+                book.getNumberOfReviews(), book.getCurrency(), book.getStarRating().getNumberOfStars(),
+                book.getCategory().id()}).toList();
         jdbcTemplate.batchUpdate("INSERT INTO books(id, name, url, imgLink, " +
                 "availability, description, upc, productType, priceExcludingTax, " +
-                "priceIncludingTax, tax, numberOfReviews, currency, starRating) " +
-                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", elements);
+                "priceIncludingTax, tax, numberOfReviews, currency, starRating, category_id) " +
+                "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", elements);
     }
 
 }
